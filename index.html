@@ -1,33 +1,43 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ニラトルフ学術統合ポータル (NIAP)</title>
-    
+    <title>ニラトルフSTN(students and Teachers Navigator)</title>
+
     <!-- Google Fonts ロード -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
 
     <style>
         /* ==========================================
            デザインシステム & 共通スタイル (白基調・サイバークリーン)
            ========================================== */
         :root {
-            --bg-color: #f1f5f9; /* 明るいグレー */
-            --wrapper-bg: #ffffff; /* 白背景 */
-            --card-bg: #f8fafc; /* カード用薄いグレー */
+            --bg-color: #f1f5f9;
+            /* 明るいグレー */
+            --wrapper-bg: #ffffff;
+            /* 白背景 */
+            --card-bg: #f8fafc;
+            /* カード用薄いグレー */
             --card-border: rgba(0, 114, 255, 0.12);
             --card-border-active: rgba(0, 114, 255, 0.4);
-            --primary: #0072ff; /* サイバーブルー */
+            --primary: #0072ff;
+            /* サイバーブルー */
             --primary-glow: rgba(0, 114, 255, 0.15);
             --secondary: #00f0ff;
-            --alert: #ef4444; /* 警告赤 */
+            --alert: #ef4444;
+            /* 警告赤 */
             --alert-bg: #fef2f2;
             --alert-border: #fca5a5;
-            --text-main: #1e293b; /* 濃いグレー */
-            --text-muted: #64748b; /* 中間グレー */
+            --text-main: #1e293b;
+            /* 濃いグレー */
+            --text-muted: #64748b;
+            /* 中間グレー */
             --grid-color: rgba(0, 114, 255, 0.03);
             --scanline-color: rgba(0, 114, 255, 0.02);
         }
@@ -48,7 +58,7 @@
             justify-content: center;
             align-items: flex-start;
             overflow-x: hidden;
-            background-image: 
+            background-image:
                 linear-gradient(var(--grid-color) 1px, transparent 1px),
                 linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
             background-size: 20px 20px;
@@ -88,7 +98,10 @@
             content: " ";
             display: block;
             position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.03) 50%);
             z-index: 999;
             background-size: 100% 4px;
@@ -99,7 +112,10 @@
         .phone-wrapper::after {
             content: "";
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: linear-gradient(to bottom, var(--scanline-color) 0%, transparent 10%, transparent 100%);
             background-size: 100% 200%;
             animation: scanline 10s linear infinite;
@@ -108,8 +124,13 @@
         }
 
         @keyframes scanline {
-            0% { background-position: 0 0; }
-            100% { background-position: 0 -200%; }
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 0 -200%;
+            }
         }
 
         .mono {
@@ -122,8 +143,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* ==========================================
@@ -204,30 +232,43 @@
            ========================================== */
         #ng-overlay {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(15, 23, 42, 0.15);
             backdrop-filter: blur(3px);
             z-index: 9000;
             display: none;
             overflow: hidden;
-            pointer-events: auto; /* イベントをここで吸収してフリーズさせる */
+            pointer-events: auto;
+            /* イベントをここで吸収してフリーズさせる */
         }
 
         .error-window {
-            position: fixed; /* 画面中央に確実に固定するため fixed に変更 */
+            position: fixed;
+            /* 画面中央に確実に固定するため fixed に変更 */
             background: #ffffff;
             border: 2px solid var(--alert);
             border-radius: 8px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
             width: 290px;
             z-index: 9100;
-            pointer-events: none; /* クリック不可の演出 */
+            pointer-events: none;
+            /* クリック不可の演出 */
             animation: errorPop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
         @keyframes errorPop {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .error-window-header {
@@ -306,7 +347,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #ffffff; /* 校章が黒なので白背景 */
+            background: #ffffff;
+            /* 校章が黒なので白背景 */
             overflow: hidden;
             flex-shrink: 0;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
@@ -460,7 +502,7 @@
             cursor: pointer;
             transition: all 0.15s ease-in-out;
             text-align: left;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.01);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.01);
         }
 
         .menu-button:active {
@@ -641,7 +683,7 @@
             border: 1px solid var(--card-border);
             border-radius: 8px;
             padding: 14px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.01);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.01);
         }
 
         .result-header {
@@ -701,7 +743,7 @@
             padding: 30px 20px;
             color: var(--text-muted);
             font-size: 11px;
-            border: 1px dashed rgba(0,0,0,0.08);
+            border: 1px dashed rgba(0, 0, 0, 0.08);
             background: #ffffff;
             border-radius: 8px;
         }
@@ -711,8 +753,12 @@
            ========================================== */
         .modal-overlay {
             display: none;
-            position: fixed; /* スクロール追従のために fixed に変更 */
-            top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed;
+            /* スクロール追従のために fixed に変更 */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(15, 23, 42, 0.45);
             backdrop-filter: blur(4px);
             z-index: 2000;
@@ -733,8 +779,15 @@
         }
 
         @keyframes modalSlide {
-            from { opacity: 0; transform: scale(0.95) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
         .modal-header {
@@ -801,10 +854,12 @@
         .modal-box.alert-modal {
             border-color: var(--alert);
         }
+
         .modal-box.alert-modal .modal-header {
             background: rgba(239, 68, 68, 0.03);
             border-bottom-color: rgba(239, 68, 68, 0.1);
         }
+
         .modal-box.alert-modal .modal-header h3 {
             color: var(--alert);
         }
@@ -856,10 +911,11 @@
         }
     </style>
 </head>
+
 <body id="portal-body">
 
     <div class="phone-wrapper">
-        
+
         <!-- ========================================================
              【最重要】NG状態用エラーウィンドウ重なりエリア (JSから生成)
              ======================================================== -->
@@ -874,9 +930,9 @@
             <div class="denied-logo">
                 <img src="./symbol.png" alt="ニラトルフ校章" onerror="this.style.display='none';">
             </div>
-            
+
             <div class="denied-title">ACCESS DENIED</div>
-            
+
             <div class="denied-card">
                 <h2>不正なアクセス経路を検知しました</h2>
                 <p>
@@ -973,8 +1029,9 @@
                             <div class="menu-icon" style="margin-bottom: 6px;">📥</div>
                             <div>
                                 <div class="menu-title" style="display:flex; align-items:center; gap:8px;">
-                                    教科書・教材ダウンロード 
-                                    <span style="background:var(--primary); color:#ffffff; font-size:8px; padding:1px 4px; border-radius:2px;">ONLINE</span>
+                                    教科書・教材ダウンロード
+                                    <span
+                                        style="background:var(--primary); color:#ffffff; font-size:8px; padding:1px 4px; border-radius:2px;">ONLINE</span>
                                 </div>
                                 <div class="menu-desc">割り当て教材・講義テキストの同期取得</div>
                             </div>
@@ -984,8 +1041,12 @@
                     <div class="menu-section-title">EMERGENCY</div>
                     <div class="menu-grid" style="grid-template-columns: 1fr;">
                         <!-- ダミーボタン5 (通常通達削除版) -->
-                        <div class="menu-button" style="height: 60px; flex-direction: row; align-items: center; justify-content: flex-start; gap: 15px;" onclick="showDummyAlert('学内緊急連絡', '現在、セキュリティ管理局から発令されている緊急警報（レベル2以上）はありません。')">
-                            <div class="menu-icon" style="margin-bottom:0; color:var(--alert); border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.04);">⚠️</div>
+                        <div class="menu-button"
+                            style="height: 60px; flex-direction: row; align-items: center; justify-content: flex-start; gap: 15px;"
+                            onclick="showDummyAlert('学内緊急連絡', '現在、セキュリティ管理局から発令されている緊急警報（レベル2以上）はありません。')">
+                            <div class="menu-icon"
+                                style="margin-bottom:0; color:var(--alert); border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.04);">
+                                ⚠️</div>
                             <div>
                                 <div class="menu-title">学内緊急連絡</div>
                                 <div class="menu-desc">避難情報・特別措置案内</div>
@@ -1016,7 +1077,8 @@
                 <!-- 検索ボックス -->
                 <div class="search-box">
                     <div class="search-input-wrapper">
-                        <input type="text" id="search-input" class="search-input" placeholder="教科書名・著者名で検索..." onkeypress="handleSearchKeyPress(event)">
+                        <input type="text" id="search-input" class="search-input" placeholder="教科書名・著者名で検索..."
+                            onkeypress="handleSearchKeyPress(event)">
                         <button class="search-btn" onclick="executeSearch()">🔍</button>
                     </div>
                 </div>
@@ -1062,7 +1124,8 @@
                 <h3 id="dl-modal-title">🔐 安全接続の確立</h3>
             </div>
             <div class="modal-body">
-                <div id="dl-textbook-info" style="font-weight: bold; margin-bottom: 15px; border-left: 3px solid var(--primary); padding-left: 8px;">
+                <div id="dl-textbook-info"
+                    style="font-weight: bold; margin-bottom: 15px; border-left: 3px solid var(--primary); padding-left: 8px;">
                     『教科書名』
                 </div>
                 <div class="dl-progress-wrapper">
@@ -1074,7 +1137,7 @@
                         <div id="dl-progress-fill" class="progress-bar-fill"></div>
                     </div>
                 </div>
-                
+
                 <div id="dl-complete-section" style="display: none;" class="fade-in">
                     <div style="color: var(--primary); font-weight: bold; font-size: 11px; margin-bottom: 8px;">
                         ✓ ファイルのダウンロードと復号に成功しました。
@@ -1096,7 +1159,7 @@
     <script>
         // 教科書・教材データベース
         let TEXTBOOK_DATABASE = [];
-        
+
         // 動作環境の取得
         const host = window.location.hostname;
         const path = window.location.pathname;
@@ -1143,7 +1206,7 @@
 
             // 2. 状態管理ファイル (status-OK.txt) の有無でOK/NG判定
             const devStatus = urlParams.get('dev_status'); // ローカルデバッグ用
-            
+
             if (devStatus === "ok") {
                 console.log("[Dev] Forced OK state");
             } else if (devStatus === "ng") {
@@ -1196,16 +1259,16 @@
             overlay.style.position = "fixed";
 
             // 1つ目のエラーウィンドウ（背面・中央）
-            createSpecificErrorWindow(overlay, 9100, 
-                "SYSTEM ERROR: CONNECTION_REJECTED", 
-                "ニラトルフSTNにアクセスできません。認証情報が間違っている可能性があります。", 
+            createSpecificErrorWindow(overlay, 9100,
+                "SYSTEM ERROR: CONNECTION_REJECTED",
+                "ニラトルフSTNにアクセスできません。認証情報が間違っている可能性があります。",
                 0, 0);
 
             // 2つ目のエラーウィンドウ（前面・少し右下に重ねる）
             setTimeout(() => {
-                createSpecificErrorWindow(overlay, 9105, 
-                    "SYSTEM ERROR: AUTH_FAILED", 
-                    "学生証がアクティブになっていません。学園図書局にてアクティベートしてください。", 
+                createSpecificErrorWindow(overlay, 9105,
+                    "SYSTEM ERROR: AUTH_FAILED",
+                    "学生証がアクティブになっていません。学園図書局にてアクティベートしてください。",
                     15, 25);
             }, 300); // 0.3秒ずらしてポップアップする演出
         }
@@ -1213,7 +1276,7 @@
         function createSpecificErrorWindow(parent, zIndex, title, message, offsetX, offsetY) {
             const win = document.createElement("div");
             win.className = "error-window";
-            
+
             // 画面中央の位置を計算（error-windowの幅は290px、概算高さ150px）
             // viewportの中央に配置し、指定のオフセットを加算
             win.style.left = `calc(50% - 145px + ${offsetX}px)`;
@@ -1335,7 +1398,7 @@
         async function syncTextbooks() {
             document.getElementById("db-load-indicator").innerText = "同期中...";
             document.getElementById("db-load-indicator").style.color = "var(--primary)";
-            
+
             let txtFiles = [];
 
             if (isGitHubPages) {
@@ -1385,7 +1448,7 @@
         function parseAndAddTextbook(fileName, text) {
             // 改行で分割
             const lines = text.split(/\r?\n/);
-            
+
             // デフォルト値
             let author = "著者不明";
             let desc = "説明はありません。";
@@ -1422,7 +1485,7 @@
         function switchPage(pageId) {
             document.getElementById("main-menu-page").style.display = "none";
             document.getElementById("textbook-page").style.display = "none";
-            
+
             if (pageId === "main-menu-page") {
                 document.getElementById("main-menu-page").style.display = "block";
             } else {
@@ -1441,9 +1504,9 @@
             }
 
             const filtered = TEXTBOOK_DATABASE.filter(book => {
-                return book.title.toLowerCase().includes(query) || 
-                       book.author.toLowerCase().includes(query) || 
-                       book.desc.toLowerCase().includes(query);
+                return book.title.toLowerCase().includes(query) ||
+                    book.author.toLowerCase().includes(query) ||
+                    book.desc.toLowerCase().includes(query);
             });
 
             renderTextbooks(filtered);
@@ -1502,7 +1565,7 @@
             document.getElementById("dl-percentage").innerText = "0%";
             document.getElementById("dl-progress-fill").style.width = "0%";
             document.getElementById("dl-complete-section").style.display = "none";
-            
+
             const footer = document.getElementById("dl-modal-footer");
             footer.innerHTML = `
                 <button class="modal-btn secondary-btn" id="dl-cancel-btn" onclick="cancelDownload()">キャンセル</button>
@@ -1540,10 +1603,10 @@
         function completeDownload() {
             document.getElementById("dl-modal-title").innerText = "🔓 同期完了";
             document.getElementById("dl-phase-text").innerText = "ダウンロードが完了しました。";
-            
+
             document.getElementById("dl-book-preview").innerText = currentBook.content;
             document.getElementById("dl-complete-section").style.display = "block";
-            
+
             const footer = document.getElementById("dl-modal-footer");
             footer.innerHTML = `
                 <button class="modal-btn secondary-btn" onclick="saveFileToDevice()">💾 端末に保存</button>
@@ -1567,15 +1630,15 @@
 
             const blob = new Blob([currentBook.content], { type: "text/plain;charset=utf-8" });
             const url = URL.createObjectURL(blob);
-            
+
             const a = document.createElement("a");
             a.href = url;
             const cleanTitle = currentBook.title.replace(/[『』]/g, "");
             a.download = `${cleanTitle}_特別配付資料.txt`;
-            
+
             document.body.appendChild(a);
             a.click();
-            
+
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
@@ -1602,4 +1665,5 @@
         }
     </script>
 </body>
+
 </html>
