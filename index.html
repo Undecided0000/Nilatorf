@@ -911,7 +911,7 @@
                         </div>
                         <div class="info-row">
                             <span class="label">ステータス</span>
-                            <span class="badge-student">外部接続認証済</span>
+                            <span class="badge-student">アクティベート済</span>
                         </div>
                         <div id="sync-status" class="sync-indicator">
                             <span>●</span> <span id="sync-text">同期完了</span>
@@ -1210,36 +1210,79 @@
         async function loadPLData(plId) {
             let name = "臨時ゲスト";
             let imgSrc = "./symbol.png";
+            let imageFound = false;
 
             document.getElementById("sync-text").innerText = "接続中...";
             document.getElementById("sync-status").style.color = "var(--primary)";
 
+            // 1. GitHub Pages上なら API を使用してPLフォルダの中身を走査
             if (isGitHubPages) {
-                // GitHub Pages上なら API を使用してPLフォルダの中身を走査
                 try {
                     const apiUrl = `https://api.github.com/repos/${userName}/${repoName}/contents/PL/${plId}`;
                     const res = await fetch(apiUrl);
                     if (res.ok) {
                         const files = await res.json();
-                        // 画像ファイル(png, jpg, jpeg, gif)を探す
-                        const imgFile = files.find(f => f.name.match(/\.(png|jpg|jpeg|gif)$/i));
+                        // 画像ファイル(png, jpg, jpeg, gif, webp)を探す
+                        const imgFile = files.find(f => f.name.match(/\.(png|jpg|jpeg|gif|webp)$/i));
                         if (imgFile) {
                             const fileName = imgFile.name;
                             name = fileName.substring(0, fileName.lastIndexOf('.'));
                             name = decodeURIComponent(name); // デコード
                             imgSrc = `./PL/${plId}/${fileName}`;
+                            imageFound = true;
+                            console.log(`[GitHub API] PL data loaded: ${name} (${imgSrc})`);
                         }
                     }
                 } catch (e) {
-                    console.error("PL fetch error via API, trying local fallback map.", e);
+                    console.error("PL fetch error via API, trying local/fallback methods.", e);
                 }
             }
 
-            // API取得に失敗した、またはローカル環境の場合のフォールバック
-            if (name === "臨時ゲスト" && LOCAL_PL_FALLBACK[plId]) {
-                const fileName = LOCAL_PL_FALLBACK[plId];
-                name = fileName.substring(0, fileName.lastIndexOf('.'));
-                imgSrc = `./PL/${plId}/${fileName}`;
+            // 2. ローカルサーバー環境（Live Server等）でのディレクトリインデックス取得の試み
+            if (!imageFound) {
+                try {
+                    const localRes = await fetch(`./PL/${plId}/`);
+                    if (localRes.ok) {
+                        const contentType = localRes.headers.get("content-type");
+                        if (contentType && contentType.includes("text/html")) {
+                            const html = await localRes.text();
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, "text/html");
+                            const links = Array.from(doc.querySelectorAll("a"));
+                            const imgLink = links.find(a => {
+                                const href = a.getAttribute("href") || "";
+                                return href.match(/\.(png|jpg|jpeg|gif|webp)$/i);
+                            });
+                            if (imgLink) {
+                                const hrefVal = imgLink.getAttribute("href");
+                                const fileName = hrefVal.split('/').pop();
+                                name = fileName.substring(0, fileName.lastIndexOf('.'));
+                                name = decodeURIComponent(name);
+                                imgSrc = `./PL/${plId}/${fileName}`;
+                                imageFound = true;
+                                console.log(`[Local Index] PL data loaded: ${name} (${imgSrc})`);
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Local directory fetch skipped or failed.", e);
+                }
+            }
+
+            // 3. API・ローカルスキャン両方で失敗した場合のフォールバックマッピング
+            if (!imageFound) {
+                if (LOCAL_PL_FALLBACK[plId]) {
+                    const fileName = LOCAL_PL_FALLBACK[plId];
+                    name = fileName.substring(0, fileName.lastIndexOf('.'));
+                    imgSrc = `./PL/${plId}/${fileName}`;
+                    imageFound = true;
+                    console.log(`[Fallback Map] PL data loaded: ${name} (${imgSrc})`);
+                } else {
+                    // 最終フォールバック：ファイル名が不明なためパラメータIDを名前にし、PL1.png等の推測パスでロードを試みる
+                    name = plId;
+                    imgSrc = `./PL/${plId}/${plId}.png`;
+                    console.log(`[Guess Path] PL data path guessed: ${imgSrc}`);
+                }
             }
 
             // 画面反映
@@ -1247,7 +1290,7 @@
             const imgEl = document.getElementById("student-photo");
             imgEl.src = imgSrc;
             imgEl.onerror = () => {
-                // 画像ロードエラー時は校章にする
+                console.error(`Failed to load student image: ${imgSrc}. Fallback to school logo.`);
                 imgEl.src = "./symbol.png";
             };
 
