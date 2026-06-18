@@ -1169,11 +1169,7 @@
         const isGitHubPages = host.includes('github.io') && repoName !== "";
 
         // ローカル環境用のフォールバック定義
-        const LOCAL_PL_FALLBACK = {
-            "PL1": "佐藤太郎.png",
-            "PL2": "鈴木花子.png",
-            "PL3": "高橋次郎.png"
-        };
+        const LOCAL_PL_FALLBACK = {};
         const LOCAL_TEXTBOOK_FALLBACK = [
             "体系的現代文読解論.txt",
             "ゼロから紐解く古文文法.txt",
@@ -1363,20 +1359,12 @@
                 }
             }
 
-            // 3. API・ローカルスキャン両方で失敗した場合のフォールバックマッピング
+            // 3. API・ローカルスキャン両方で失敗した場合のフォールバック
             if (!imageFound) {
-                if (LOCAL_PL_FALLBACK[plId]) {
-                    const fileName = LOCAL_PL_FALLBACK[plId];
-                    name = fileName.substring(0, fileName.lastIndexOf('.'));
-                    imgSrc = `./PL/${plId}/${fileName}`;
-                    imageFound = true;
-                    console.log(`[Fallback Map] PL data loaded: ${name} (${imgSrc})`);
-                } else {
-                    // 最終フォールバック：ファイル名が不明なためパラメータIDを名前にし、PL1.png等の推測パスでロードを試みる
-                    name = plId;
-                    imgSrc = `./PL/${plId}/${plId}.png`;
-                    console.log(`[Guess Path] PL data path guessed: ${imgSrc}`);
-                }
+                // ファイル名が不明なためパラメータID（例: PL1）を名前にし、PL1.png等の推測パスでロードを試みる
+                name = plId;
+                imgSrc = `./PL/${plId}/${plId}.png`;
+                console.log(`[Guess Path] PL data path guessed: ${imgSrc}`);
             }
 
             // 画面反映
