@@ -1,43 +1,1657 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ページを移動しています...</title>
-    <meta http-equiv="refresh" content="0;url=https://booth.pm/ja/items/4022246">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ニラトルフSTN(students and Teachers Navigator)</title>
+
+    <!-- Google Fonts ロード -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
+
     <style>
+        /* ==========================================
+           デザインシステム & 共通スタイル (白基調・サイバークリーン)
+           ========================================== */
+        :root {
+            --bg-color: #f1f5f9;
+            /* 明るいグレー */
+            --wrapper-bg: #ffffff;
+            /* 白背景 */
+            --card-bg: #f8fafc;
+            /* カード用薄いグレー */
+            --card-border: rgba(0, 114, 255, 0.12);
+            --card-border-active: rgba(0, 114, 255, 0.4);
+            --primary: #0072ff;
+            /* サイバーブルー */
+            --primary-glow: rgba(0, 114, 255, 0.15);
+            --secondary: #00f0ff;
+            --alert: #ef4444;
+            /* 警告赤 */
+            --alert-bg: #fef2f2;
+            --alert-border: #fca5a5;
+            --text-main: #1e293b;
+            /* 濃いグレー */
+            --text-muted: #64748b;
+            /* 中間グレー */
+            --grid-color: rgba(0, 114, 255, 0.03);
+            --scanline-color: rgba(0, 114, 255, 0.02);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans JP', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+            align-items: flex-start;
+            overflow-x: hidden;
+            background-image:
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: center;
+        }
+
+        /* 全画面操作無効化用（NG状態フリーズ用） */
+        .frozen {
+            overflow: hidden !important;
+            height: 100vh !important;
+            pointer-events: none !important;
+        }
+
+        /* モーダル表示中の背面スクロール抑制用 */
+        .modal-open {
+            overflow: hidden !important;
+            height: 100vh !important;
+        }
+
+        /* PCでの閲覧時にスマホ風の枠で囲む */
+        .phone-wrapper {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            background: var(--wrapper-bg);
+            border-left: 1px solid rgba(0, 114, 255, 0.1);
+            border-right: 1px solid rgba(0, 114, 255, 0.1);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.05);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 40px;
+        }
+
+        /* スキャンライン演出（明るいデザインに合わせた微細な調整） */
+        .phone-wrapper::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.03) 50%);
+            z-index: 999;
+            background-size: 100% 4px;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .phone-wrapper::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--scanline-color) 0%, transparent 10%, transparent 100%);
+            background-size: 100% 200%;
+            animation: scanline 10s linear infinite;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        @keyframes scanline {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 0 -200%;
+            }
+        }
+
+        .mono {
+            font-family: 'Share Tech Mono', monospace;
+            letter-spacing: 0.05em;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ==========================================
+           不正アクセス画面 (?src=nfc なし)
+           ========================================== */
+        .denied-container {
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f7f9fa;
-            color: #333;
+            justify-content: center;
+            padding: 40px 24px;
+            min-height: 100vh;
             text-align: center;
+            background: var(--alert-bg);
         }
-        .container {
-            padding: 20px;
+
+        .denied-logo {
+            width: 110px;
+            height: 110px;
+            margin-bottom: 24px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid var(--alert);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
-        a {
-            color: #fc4d50;
-            text-decoration: none;
+
+        .denied-logo img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+
+        .denied-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--alert);
+            margin-bottom: 16px;
+            letter-spacing: 0.05em;
+        }
+
+        .denied-card {
+            background: #ffffff;
+            border: 1px solid var(--alert-border);
+            border-radius: 12px;
+            padding: 24px;
+            width: 100%;
+            box-shadow: 0 6px 18px rgba(239, 68, 68, 0.06);
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .denied-card h2 {
+            font-size: 15px;
+            color: var(--text-main);
+            margin-bottom: 12px;
+            border-bottom: 1px solid #fee2e2;
+            padding-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .denied-card p {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 12px;
+        }
+
+        .denied-card p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* ==========================================
+           【最重要】NG状態：アクティベートエラーウィンドウ群
+           ========================================== */
+        #ng-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.15);
+            backdrop-filter: blur(3px);
+            z-index: 9000;
+            display: none;
+            overflow: hidden;
+            pointer-events: auto;
+            /* イベントをここで吸収してフリーズさせる */
+        }
+
+        .error-window {
+            position: fixed;
+            /* 画面中央に確実に固定するため fixed に変更 */
+            background: #ffffff;
+            border: 2px solid var(--alert);
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            width: 290px;
+            z-index: 9100;
+            pointer-events: none;
+            /* クリック不可の演出 */
+            animation: errorPop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes errorPop {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .error-window-header {
+            background: var(--alert);
+            color: #ffffff;
+            padding: 8px 12px;
+            font-size: 11px;
             font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
         }
-        a:hover {
-            text-decoration: underline;
+
+        .error-window-close {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+        }
+
+        .error-window-body {
+            padding: 16px;
+            font-size: 12px;
+            color: var(--text-main);
+            line-height: 1.5;
+            font-weight: 500;
+            text-align: left;
+        }
+
+        .error-window-footer {
+            border-top: 1px solid #f1f5f9;
+            padding: 10px 12px;
+            display: flex;
+            justify-content: flex-end;
+            background: #f8fafc;
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+
+        .error-window-btn {
+            background: var(--alert);
+            color: #ffffff;
+            border: none;
+            padding: 4px 12px;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+
+        /* ==========================================
+           正常ポータル画面 (OK状態)
+           ========================================== */
+        .portal-header {
+            display: flex;
+            align-items: center;
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(0, 114, 255, 0.1);
+            background: #ffffff;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .school-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 114, 255, 0.2);
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            /* 校章が黒なので白背景 */
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        }
+
+        .school-logo img {
+            width: 82%;
+            height: 82%;
+            object-fit: contain;
+        }
+
+        .header-titles h1 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: 0.05em;
+        }
+
+        .header-titles p {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 8px;
+            color: var(--primary);
+            letter-spacing: 0.05em;
+            margin-top: 2px;
+            text-transform: uppercase;
+        }
+
+        /* 個別探索者（学生）情報カード */
+        .student-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            margin: 16px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .student-photo-area {
+            width: 70px;
+            height: 90px;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: #ffffff;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .student-photo-area img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .student-info-area {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-grow: 1;
+        }
+
+        .info-row {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-row .label {
+            font-size: 9px;
+            color: var(--text-muted);
+            margin-bottom: 1px;
+        }
+
+        .info-row .value {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .badge-student {
+            display: inline-block;
+            background: rgba(0, 114, 255, 0.06);
+            border: 1px solid rgba(0, 114, 255, 0.2);
+            color: var(--primary);
+            border-radius: 4px;
+            padding: 1px 5px;
+            font-size: 9px;
+            font-weight: bold;
+            align-self: flex-start;
+            margin-top: 2px;
+        }
+
+        .sync-indicator {
+            font-size: 8px;
+            color: var(--primary);
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        /* メインコンテンツ */
+        .portal-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0 16px;
+        }
+
+        .menu-section-title {
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin: 12px 0 8px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .menu-section-title::after {
+            content: "";
+            flex-grow: 1;
+            height: 1px;
+            background: linear-gradient(to right, rgba(0, 114, 255, 0.15), transparent);
+            margin-left: 8px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .menu-button {
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: space-between;
+            height: 92px;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            text-align: left;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.01);
+        }
+
+        .menu-button:active {
+            border-color: var(--primary);
+            background: #f8fafc;
+            transform: scale(0.97);
+        }
+
+        .menu-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: rgba(0, 114, 255, 0.04);
+            border: 1px solid rgba(0, 114, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            color: var(--primary);
+            font-size: 14px;
+        }
+
+        .menu-button.active-btn {
+            border: 1px solid var(--primary);
+            box-shadow: 0 4px 12px rgba(0, 114, 255, 0.06);
+            background: linear-gradient(135deg, #ffffff 0%, rgba(0, 114, 255, 0.02) 100%);
+        }
+
+        .menu-button.active-btn .menu-icon {
+            background: rgba(0, 114, 255, 0.08);
+            border-color: var(--primary);
+        }
+
+        .menu-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .menu-desc {
+            font-size: 9px;
+            color: var(--text-muted);
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+
+        .portal-footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 20px;
+            font-size: 8px;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(0, 0, 0, 0.04);
+            font-family: 'Share Tech Mono', monospace;
+            letter-spacing: 0.05em;
+        }
+
+        /* ==========================================
+           サブ画面: 教科書ダウンロード画面
+           ========================================== */
+        .sub-page {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+        }
+
+        .back-bar {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            background: #ffffff;
+            cursor: pointer;
+            color: var(--primary);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .back-bar:active {
+            background: #f8fafc;
+        }
+
+        .back-icon {
+            margin-right: 4px;
+        }
+
+        .page-title-area {
+            padding: 16px;
+        }
+
+        .page-title-area h2 {
+            font-size: 15px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+        }
+
+        .page-title-area h2::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 14px;
+            background: var(--primary);
+            margin-right: 6px;
+        }
+
+        .page-title-area p {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        /* 検索ボックス */
+        .search-box {
+            padding: 0 16px 14px 16px;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-input {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            border-radius: 8px;
+            padding: 10px 40px 10px 12px;
+            color: var(--text-main);
+            font-size: 12px;
+            outline: none;
+            transition: all 0.15s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 6px var(--primary-glow);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 8px;
+            background: transparent;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+
+        .db-status-bar {
+            padding: 0 16px 10px 16px;
+            font-size: 9px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* 検索結果リスト */
+        .results-container {
+            padding: 0 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .result-card {
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 14px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.01);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+        }
+
+        .result-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .result-author {
+            font-size: 10px;
+            color: var(--primary);
+            background: rgba(0, 114, 255, 0.05);
+            padding: 1px 5px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 114, 255, 0.1);
+        }
+
+        .result-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .dl-btn {
+            width: 100%;
+            background: linear-gradient(to right, var(--primary), #3b82f6);
+            border: none;
+            color: #fff;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            box-shadow: 0 2px 6px rgba(0, 114, 255, 0.1);
+        }
+
+        .dl-btn:active {
+            transform: translateY(1px);
+            box-shadow: none;
+            filter: brightness(0.95);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-muted);
+            font-size: 11px;
+            border: 1px dashed rgba(0, 0, 0, 0.08);
+            background: #ffffff;
+            border-radius: 8px;
+        }
+
+        /* ==========================================
+           カスタムモーダル (ポップアップ)
+           ========================================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            /* スクロール追従のために fixed に変更 */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .modal-box {
+            background: #ffffff;
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            animation: modalSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes modalSlide {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            background: rgba(0, 114, 255, 0.03);
+            border-bottom: 1px solid rgba(0, 114, 255, 0.1);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .modal-close-x {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .modal-body {
+            padding: 20px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--text-main);
+        }
+
+        .modal-footer {
+            padding: 0 16px 16px 16px;
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 6px 14px;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .modal-btn.primary-btn {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .modal-btn.secondary-btn {
+            background: #f1f5f9;
+            color: var(--text-main);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        /* 警告用モーダル */
+        .modal-box.alert-modal {
+            border-color: var(--alert);
+        }
+
+        .modal-box.alert-modal .modal-header {
+            background: rgba(239, 68, 68, 0.03);
+            border-bottom-color: rgba(239, 68, 68, 0.1);
+        }
+
+        .modal-box.alert-modal .modal-header h3 {
+            color: var(--alert);
+        }
+
+        /* ==========================================
+           ダウンロードプログレスバー & プレビュー
+           ========================================== */
+        .dl-progress-wrapper {
+            margin: 12px 0;
+        }
+
+        .dl-status-txt {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .progress-bar-bg {
+            background: #f1f5f9;
+            border: 1px solid rgba(0, 114, 255, 0.1);
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            background: linear-gradient(90deg, var(--primary), #60a5fa);
+            height: 100%;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .book-preview-area {
+            background: #f8fafc;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 11px;
+            line-height: 1.5;
+            max-height: 140px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            color: var(--text-main);
+            margin-top: 8px;
+            text-align: left;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <p>自動的にBOOTHのページへ移動します。</p>
-        <p>移動しない場合は、お手数ですが<a href="https://booth.pm/ja/items/4022246">こちらのリンク</a>をクリックしてください。</p>
+
+<body id="portal-body">
+
+    <div class="phone-wrapper">
+
+        <!-- ========================================================
+             【最重要】NG状態用エラーウィンドウ重なりエリア (JSから生成)
+             ======================================================== -->
+        <div id="ng-overlay">
+            <!-- 動的にエラーウィンドウが生成されます -->
+        </div>
+
+        <!-- ========================================================
+             【直リンクエラー】不正アクセス用コンテナ
+             ======================================================== -->
+        <div id="denied-screen" class="denied-container fade-in" style="display: none;">
+            <div class="denied-logo">
+                <img src="./symbol.png" alt="ニラトルフ校章" onerror="this.style.display='none';">
+            </div>
+
+            <div class="denied-title">ACCESS DENIED</div>
+
+            <div class="denied-card">
+                <h2>不正なアクセス経路を検知しました</h2>
+                <p>
+                    本ポータルサイトへのアクセスには、配布された認証端末（NFCタグ等）からの直接遷移が必要です。
+                </p>
+                <p>
+                    URLの直接入力や、未検証の端末からのリンク移行はシステムセキュリティ規定により遮断されました。
+                </p>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             【正常画面】ポータル本体 (OK状態時にアクティブ)
+             ======================================================== -->
+        <div id="portal-screen" class="fade-in" style="display: none;">
+            <!-- ヘッダー -->
+            <header class="portal-header">
+                <div class="school-logo">
+                    <img src="./symbol.png" alt="ニラトルフ校章" onerror="this.style.display='none';">
+                </div>
+                <div class="header-titles">
+                    <h1>先端教育特別区域ニラトルフ</h1>
+                    <p class="mono">special school area for cutting-edge education Nilatorf</p>
+                </div>
+            </header>
+
+            <!-- メインメニュー画面 -->
+            <div id="main-menu-page" class="fade-in">
+                <!-- 個別探索者ステータスカード -->
+                <div class="student-card">
+                    <div class="student-photo-area">
+                        <img id="student-photo" src="./symbol.png" alt="顔写真">
+                    </div>
+                    <div class="student-info-area">
+                        <div class="info-row">
+                            <span class="label">ログイン中の学生名</span>
+                            <span class="value" id="student-name">臨時ゲスト</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">ステータス</span>
+                            <span class="badge-student">アクティベート済</span>
+                        </div>
+                        <div id="sync-status" class="sync-indicator">
+                            <span>●</span> <span id="sync-text">同期完了</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- メニューボタン群 -->
+                <div class="portal-content">
+                    <div class="menu-section-title">ACADEMIC TOOLS</div>
+                    <div class="menu-grid">
+                        <!-- ダミーボタン1 -->
+                        <div class="menu-button" onclick="showDummyAlert('履修登録')">
+                            <div class="menu-icon">📇</div>
+                            <div>
+                                <div class="menu-title">履修登録</div>
+                                <div class="menu-desc">履修科目の申請・変更</div>
+                            </div>
+                        </div>
+
+                        <!-- ダミーボタン2 -->
+                        <div class="menu-button" onclick="showDummyAlert('シラバス閲覧')">
+                            <div class="menu-icon">📖</div>
+                            <div>
+                                <div class="menu-title">シラバス閲覧</div>
+                                <div class="menu-desc">各講義のシラバス照会</div>
+                            </div>
+                        </div>
+
+                        <!-- ダミーボタン3 -->
+                        <div class="menu-button" onclick="showDummyAlert('学費納入案内')">
+                            <div class="menu-icon">💳</div>
+                            <div>
+                                <div class="menu-title">学費納入案内</div>
+                                <div class="menu-desc">学費情報・納付状況</div>
+                            </div>
+                        </div>
+
+                        <!-- ダミーボタン4 -->
+                        <div class="menu-button" onclick="showDummyAlert('施設予約')">
+                            <div class="menu-icon">🏫</div>
+                            <div>
+                                <div class="menu-title">施設予約</div>
+                                <div class="menu-desc">実習教室・セミナー室の予約</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-section-title">DOWNLOAD SECTION</div>
+                    <div class="menu-grid" style="grid-template-columns: 1fr;">
+                        <!-- 教科書ダウンロード (メインアクティブ) -->
+                        <div class="menu-button active-btn" onclick="switchPage('textbook-page')">
+                            <div class="menu-icon" style="margin-bottom: 6px;">📥</div>
+                            <div>
+                                <div class="menu-title" style="display:flex; align-items:center; gap:8px;">
+                                    教科書・教材ダウンロード
+                                    <span
+                                        style="background:var(--primary); color:#ffffff; font-size:8px; padding:1px 4px; border-radius:2px;">ONLINE</span>
+                                </div>
+                                <div class="menu-desc">割り当て教材・講義テキストの同期取得</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-section-title">EMERGENCY</div>
+                    <div class="menu-grid" style="grid-template-columns: 1fr;">
+                        <!-- ダミーボタン5 (通常通達削除版) -->
+                        <div class="menu-button"
+                            style="height: 60px; flex-direction: row; align-items: center; justify-content: flex-start; gap: 15px;"
+                            onclick="showDummyAlert('学内緊急連絡', '現在、セキュリティ管理局から発令されている緊急警報（レベル2以上）はありません。')">
+                            <div class="menu-icon"
+                                style="margin-bottom:0; color:var(--alert); border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.04);">
+                                ⚠️</div>
+                            <div>
+                                <div class="menu-title">学内緊急連絡</div>
+                                <div class="menu-desc">避難情報・特別措置案内</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- フッター -->
+                <footer class="portal-footer">
+                    &copy; special school area for cutting-edge education Nilatorf
+                </footer>
+            </div>
+
+            <!-- ========================================================
+                 【正常画面内】教科書ダウンロード サブページ
+                 ======================================================== -->
+            <div id="textbook-page" class="sub-page">
+                <div class="back-bar" onclick="switchPage('main-menu-page')">
+                    <span class="back-icon">◀</span> ポータルホームへ戻る
+                </div>
+
+                <div class="page-title-area">
+                    <h2>教材ダウンロードシステム</h2>
+                    <p>外部サーバーと同期し、最新の教科書データファイルを取得します。</p>
+                </div>
+
+                <!-- 検索ボックス -->
+                <div class="search-box">
+                    <div class="search-input-wrapper">
+                        <input type="text" id="search-input" class="search-input" placeholder="教科書名・著者名で検索..."
+                            onkeypress="handleSearchKeyPress(event)">
+                        <button class="search-btn" onclick="executeSearch()">🔍</button>
+                    </div>
+                </div>
+
+                <div class="db-status-bar">
+                    <span id="db-count">同期済み: 0 件</span>
+                    <span id="db-load-indicator" style="color: var(--primary);">同期完了</span>
+                </div>
+
+                <!-- 検索結果リスト -->
+                <div id="search-results" class="results-container">
+                    <!-- JSで動的に追加されます -->
+                </div>
+            </div>
+        </div>
+
+    </div> <!-- /phone-wrapper -->
+
+    <!-- ========================================================
+         カスタムモーダル用オーバーレイ (ポップアップ)
+         ======================================================== -->
+    <div id="custom-modal" class="modal-overlay" onclick="closeModal(event)">
+        <div id="modal-box" class="modal-box alert-modal">
+            <div class="modal-header">
+                <h3 id="modal-title">エラー</h3>
+                <button class="modal-close-x" onclick="forceCloseModal()">×</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                現在アクセスできません
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary-btn" onclick="forceCloseModal()">閉じる</button>
+            </div>
+        </div>
     </div>
 
+    <!-- ========================================================
+         ダウンロード処理モーダル用オーバーレイ
+         ======================================================== -->
+    <div id="dl-modal" class="modal-overlay">
+        <div class="modal-box" id="dl-modal-box">
+            <div class="modal-header">
+                <h3 id="dl-modal-title">🔐 安全接続の確立</h3>
+            </div>
+            <div class="modal-body">
+                <div id="dl-textbook-info"
+                    style="font-weight: bold; margin-bottom: 15px; border-left: 3px solid var(--primary); padding-left: 8px;">
+                    『教科書名』
+                </div>
+                <div class="dl-progress-wrapper">
+                    <div class="dl-status-txt">
+                        <span id="dl-phase-text">リクエスト送信中...</span>
+                        <span class="mono" id="dl-percentage">0%</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div id="dl-progress-fill" class="progress-bar-fill"></div>
+                    </div>
+                </div>
+
+                <div id="dl-complete-section" style="display: none;" class="fade-in">
+                    <div style="color: var(--primary); font-weight: bold; font-size: 11px; margin-bottom: 8px;">
+                        ✓ ファイルのダウンロードと復号に成功しました。
+                    </div>
+                    <div class="book-preview-area" id="dl-book-preview">
+                        <!-- テキストプレビュー -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" id="dl-modal-footer">
+                <button class="modal-btn secondary-btn" id="dl-cancel-btn" onclick="cancelDownload()">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         JavaScript ロジック
+         ======================================================== -->
     <script>
-        window.location.href = "https://booth.pm/ja/items/4022246";
+        // 教科書・教材データベース
+        let TEXTBOOK_DATABASE = [];
+
+        // 動作環境の取得
+        const host = window.location.hostname;
+        const path = window.location.pathname;
+        const parts = path.split('/').filter(p => p !== "");
+        const repoName = parts[0] || "";
+        const userName = host.split('.')[0];
+        const isGitHubPages = host.includes('github.io') && repoName !== "";
+
+        // ローカル環境用のフォールバック定義
+        const LOCAL_PL_FALLBACK = {};
+        const LOCAL_TEXTBOOK_FALLBACK = [
+            "体系的現代文読解論.txt",
+            "ゼロから紐解く古文文法.txt",
+            "漢文構造の基本ルール.txt",
+            "構文で覚える長文読解のステップ.txt",
+            "実践アカデミックライティング.txt",
+            "本質から理解する力学と波動.txt",
+            "物質の構造と化学反応のロジック.txt",
+            "生物現象のしくみと代謝.txt",
+            "構造で捉える日本近現代史.txt",
+            "通史で繋ぐ世界の歩み.txt",
+            "データの背景を読む系統地理.txt",
+            "現代社会の仕組みとリーガルマインド.txt"
+        ];
+
+        /* ========================================================
+           初期設定 & 状態監視
+           ======================================================== */
+        document.addEventListener("DOMContentLoaded", async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isNfc = urlParams.get('src') === 'nfc';
+            const plId = urlParams.get('id') || "";
+
+            // 1. 直リンクの制限チェック (src=nfcの有無)
+            if (!isNfc) {
+                document.getElementById("denied-screen").style.display = "flex";
+                document.getElementById("portal-screen").style.display = "none";
+                return;
+            }
+
+            // 2. 状態管理ファイル (status-OK.txt) の有無でOK/NG判定
+            const devStatus = urlParams.get('dev_status'); // ローカルデバッグ用
+
+            if (devStatus === "ok") {
+                console.log("[Dev] Forced OK state");
+            } else if (devStatus === "ng") {
+                console.log("[Dev] Forced NG state");
+                triggerNGState();
+                return;
+            } else {
+                try {
+                    // キャッシュ回避のためにタイムスタンプを付与
+                    const statusResponse = await fetch(`status-OK.txt?t=${new Date().getTime()}`);
+                    // status-OK.txt が存在しない（ok=false）場合はNG状態とする
+                    if (!statusResponse.ok) {
+                        triggerNGState();
+                        return;
+                    }
+                } catch (e) {
+                    // file:// プロトコルなどのCORSエラー時は、ローカルでの動作確認をしやすくするため
+                    // デフォルトでOK状態を表示させる（コンソールに警告のみ出力）
+                    if (window.location.protocol === 'file:') {
+                        console.warn("Detected file:// protocol. Default to OK state for local development. Use URL param '?src=nfc&dev_status=ng' to test NG state.", e);
+                    } else {
+                        // 本番環境（サーバー上）での通信エラー時は、安全のためアクセスをブロック（NG）する
+                        triggerNGState();
+                        return;
+                    }
+                }
+            }
+
+            // 3. OK状態：通常表示
+            document.getElementById("portal-screen").style.display = "block";
+            document.getElementById("denied-screen").style.display = "none";
+
+            // 探索者個別データの同期
+            if (plId) {
+                await loadPLData(plId);
+            }
+
+            // 教科書データの同期
+            await syncTextbooks();
+        });
+
+        /* ========================================================
+           NG状態：エラーウィンドウフリーズ演出
+           ======================================================== */
+        function triggerNGState() {
+            // 全画面スクロール・ポインタ操作禁止
+            document.body.classList.add("frozen");
+            const overlay = document.getElementById("ng-overlay");
+            overlay.style.display = "block";
+            overlay.style.position = "fixed";
+
+            // 1つ目のエラーウィンドウ（背面・中央）
+            createSpecificErrorWindow(overlay, 9100,
+                "SYSTEM ERROR: CONNECTION_REJECTED",
+                "ニラトルフSTNにアクセスできません。認証情報が間違っている可能性があります。",
+                0, 0);
+
+            // 2つ目のエラーウィンドウ（前面・少し右下に重ねる）
+            setTimeout(() => {
+                createSpecificErrorWindow(overlay, 9105,
+                    "SYSTEM ERROR: AUTH_FAILED",
+                    "学生証がアクティブになっていません。学園図書局にてアクティベートしてください。",
+                    15, 25);
+            }, 300); // 0.3秒ずらしてポップアップする演出
+        }
+
+        function createSpecificErrorWindow(parent, zIndex, title, message, offsetX, offsetY) {
+            const win = document.createElement("div");
+            win.className = "error-window";
+
+            // 画面中央の位置を計算（error-windowの幅は290px、概算高さ150px）
+            // viewportの中央に配置し、指定のオフセットを加算
+            win.style.left = `calc(50% - 145px + ${offsetX}px)`;
+            win.style.top = `calc(50% - 75px + ${offsetY}px)`;
+            win.style.zIndex = zIndex;
+
+            win.innerHTML = `
+                <div class="error-window-header">
+                    <span>${title}</span>
+                    <div class="error-window-close">×</div>
+                </div>
+                <div class="error-window-body">
+                    ${message}
+                </div>
+                <div class="error-window-footer">
+                    <button class="error-window-btn">再試行</button>
+                </div>
+            `;
+            parent.appendChild(win);
+        }
+
+        /* ========================================================
+           探索者個別データの読み込み (GitHub API ⇄ ローカルフォールバック)
+           ======================================================== */
+        async function loadPLData(plId) {
+            let name = "臨時ゲスト";
+            let imgSrc = "./symbol.png";
+            let imageFound = false;
+
+            document.getElementById("sync-text").innerText = "接続中...";
+            document.getElementById("sync-status").style.color = "var(--primary)";
+
+            // 1. GitHub Pages上なら API を使用してPLフォルダの中身を走査
+            if (isGitHubPages) {
+                try {
+                    const apiUrl = `https://api.github.com/repos/${userName}/${repoName}/contents/PL/${plId}`;
+                    const res = await fetch(apiUrl);
+                    if (res.ok) {
+                        const files = await res.json();
+                        // 画像ファイル(png, jpg, jpeg, gif, webp)を探す
+                        const imgFile = files.find(f => f.name.match(/\.(png|jpg|jpeg|gif|webp)$/i));
+                        if (imgFile) {
+                            const fileName = imgFile.name;
+                            name = fileName.substring(0, fileName.lastIndexOf('.'));
+                            name = decodeURIComponent(name); // デコード
+                            imgSrc = `./PL/${plId}/${fileName}`;
+                            imageFound = true;
+                            console.log(`[GitHub API] PL data loaded: ${name} (${imgSrc})`);
+                        }
+                    }
+                } catch (e) {
+                    console.error("PL fetch error via API, trying local/fallback methods.", e);
+                }
+            }
+
+            // 2. ローカルサーバー環境（Live Server等）でのディレクトリインデックス取得の試み
+            if (!imageFound) {
+                try {
+                    const localRes = await fetch(`./PL/${plId}/`);
+                    if (localRes.ok) {
+                        const contentType = localRes.headers.get("content-type");
+                        if (contentType && contentType.includes("text/html")) {
+                            const html = await localRes.text();
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, "text/html");
+                            const links = Array.from(doc.querySelectorAll("a"));
+                            const imgLink = links.find(a => {
+                                const href = a.getAttribute("href") || "";
+                                return href.match(/\.(png|jpg|jpeg|gif|webp)$/i);
+                            });
+                            if (imgLink) {
+                                const hrefVal = imgLink.getAttribute("href");
+                                const fileName = hrefVal.split('/').pop();
+                                name = fileName.substring(0, fileName.lastIndexOf('.'));
+                                name = decodeURIComponent(name);
+                                imgSrc = `./PL/${plId}/${fileName}`;
+                                imageFound = true;
+                                console.log(`[Local Index] PL data loaded: ${name} (${imgSrc})`);
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Local directory fetch skipped or failed.", e);
+                }
+            }
+
+            // 3. API・ローカルスキャン両方で失敗した場合のフォールバック
+            if (!imageFound) {
+                // ファイル名が不明なためパラメータID（例: PL1）を名前にし、PL1.png等の推測パスでロードを試みる
+                name = plId;
+                imgSrc = `./PL/${plId}/${plId}.png`;
+                console.log(`[Guess Path] PL data path guessed: ${imgSrc}`);
+            }
+
+            // 画面反映
+            document.getElementById("student-name").innerText = name;
+            const imgEl = document.getElementById("student-photo");
+            imgEl.src = imgSrc;
+            imgEl.onerror = () => {
+                console.error(`Failed to load student image: ${imgSrc}. Fallback to school logo.`);
+                imgEl.src = "./symbol.png";
+            };
+
+            document.getElementById("sync-text").innerText = "同期完了";
+            document.getElementById("sync-status").style.color = "#22c55e"; // 緑色
+        }
+
+        /* ========================================================
+           教科書データ読み込み（textbook/ フォルダの txt ファイル同期）
+           ======================================================== */
+        async function syncTextbooks() {
+            document.getElementById("db-load-indicator").innerText = "同期中...";
+            document.getElementById("db-load-indicator").style.color = "var(--primary)";
+
+            let txtFiles = [];
+
+            if (isGitHubPages) {
+                // GitHub API経由で textbook/ フォルダ内のファイルリストを取得
+                try {
+                    const apiUrl = `https://api.github.com/repos/${userName}/${repoName}/contents/textbook`;
+                    const res = await fetch(apiUrl);
+                    if (res.ok) {
+                        const files = await res.json();
+                        // txtファイルのみ取得
+                        txtFiles = files.filter(f => f.name.endsWith('.txt')).map(f => f.name);
+                    }
+                } catch (e) {
+                    console.error("Textbook API list fetch error, trying local list.", e);
+                }
+            }
+
+            // ローカル環境、またはAPIエラー時はデフォルトリストを使用
+            if (txtFiles.length === 0) {
+                txtFiles = LOCAL_TEXTBOOK_FALLBACK;
+            }
+
+            // 各txtファイルの中身をfetchしてデータベース化
+            const loadPromises = txtFiles.map(async (fileName) => {
+                try {
+                    // キャッシュを避ける
+                    const response = await fetch(`textbook/${fileName}?t=${new Date().getTime()}`);
+                    if (response.ok) {
+                        const text = await response.text();
+                        parseAndAddTextbook(fileName, text);
+                    }
+                } catch (e) {
+                    console.error(`Failed to load textbook file: ${fileName}`, e);
+                }
+            });
+
+            await Promise.all(loadPromises);
+
+            // 検索結果に描画
+            document.getElementById("db-count").innerText = `同期済み: ${TEXTBOOK_DATABASE.length} 件`;
+            document.getElementById("db-load-indicator").innerText = "同期完了";
+            document.getElementById("db-load-indicator").style.color = "#22c55e";
+            renderTextbooks(TEXTBOOK_DATABASE);
+        }
+
+        // txtファイルをパースしてデータベースに追加
+        function parseAndAddTextbook(fileName, text) {
+            // 改行で分割
+            const lines = text.split(/\r?\n/);
+
+            // デフォルト値
+            let author = "著者不明";
+            let desc = "説明はありません。";
+            let contentStartIdx = 0;
+
+            // 1行目のパース (例: 「著者: 〇〇」)
+            if (lines[0] && lines[0].startsWith("著者:")) {
+                author = lines[0].replace("著者:", "").trim();
+                contentStartIdx = 1;
+            }
+
+            // 2行目のパース (例: 「説明: 〇〇」)
+            if (lines[1] && lines[1].startsWith("説明:")) {
+                desc = lines[1].replace("説明:", "").trim();
+                contentStartIdx = 2;
+            }
+
+            // 3行目以降を本文（content）とする
+            const content = lines.slice(contentStartIdx).join("\n").trim();
+            const title = `『${fileName.replace(".txt", "")}』`;
+
+            TEXTBOOK_DATABASE.push({
+                id: encodeURIComponent(fileName),
+                title: title,
+                author: author,
+                desc: desc,
+                content: content
+            });
+        }
+
+        /* ========================================================
+           ページ遷移 & 検索
+           ======================================================== */
+        function switchPage(pageId) {
+            document.getElementById("main-menu-page").style.display = "none";
+            document.getElementById("textbook-page").style.display = "none";
+
+            if (pageId === "main-menu-page") {
+                document.getElementById("main-menu-page").style.display = "block";
+            } else {
+                const targetPage = document.getElementById(pageId);
+                if (targetPage) {
+                    targetPage.style.display = "flex";
+                }
+            }
+        }
+
+        function executeSearch() {
+            const query = document.getElementById("search-input").value.trim().toLowerCase();
+            if (query === "") {
+                renderTextbooks(TEXTBOOK_DATABASE);
+                return;
+            }
+
+            const filtered = TEXTBOOK_DATABASE.filter(book => {
+                return book.title.toLowerCase().includes(query) ||
+                    book.author.toLowerCase().includes(query) ||
+                    book.desc.toLowerCase().includes(query);
+            });
+
+            renderTextbooks(filtered);
+        }
+
+        function handleSearchKeyPress(event) {
+            if (event.key === 'Enter') {
+                executeSearch();
+            }
+        }
+
+        function renderTextbooks(list) {
+            const container = document.getElementById("search-results");
+            container.innerHTML = "";
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <div>❌ 一致する教材データが見つかりません</div>
+                        <div style="font-size:10px; margin-top:6px; color:var(--text-muted);">教科書フォルダまたはキーワードを確認してください。</div>
+                    </div>
+                `;
+                return;
+            }
+
+            list.forEach(book => {
+                const card = document.createElement("div");
+                card.className = "result-card fade-in";
+                card.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-title">${book.title}</div>
+                        <div class="result-author">${book.author}</div>
+                    </div>
+                    <div class="result-desc">${book.desc}</div>
+                    <button class="dl-btn" onclick="startDownload('${book.id}')">
+                        📥 同期ダウンロード
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        /* ========================================================
+           教科書ダウンロード・Blob保存
+           ======================================================== */
+        let dlInterval = null;
+        let currentBook = null;
+
+        function startDownload(bookId) {
+            currentBook = TEXTBOOK_DATABASE.find(b => b.id === bookId);
+            if (!currentBook) return;
+
+            document.getElementById("dl-modal-title").innerText = "🔒 安全接続の確立";
+            document.getElementById("dl-textbook-info").innerText = currentBook.title + " (著: " + currentBook.author + ")";
+            document.getElementById("dl-phase-text").innerText = "SSLハンドシェイク確立中...";
+            document.getElementById("dl-percentage").innerText = "0%";
+            document.getElementById("dl-progress-fill").style.width = "0%";
+            document.getElementById("dl-complete-section").style.display = "none";
+
+            const footer = document.getElementById("dl-modal-footer");
+            footer.innerHTML = `
+                <button class="modal-btn secondary-btn" id="dl-cancel-btn" onclick="cancelDownload()">キャンセル</button>
+            `;
+
+            document.getElementById("dl-modal").style.display = "flex";
+            document.body.classList.add("modal-open");
+
+            let percent = 0;
+            const phases = [
+                { limit: 25, text: "サーバーへ同期要求送信中..." },
+                { limit: 55, text: "認証キー確認中..." },
+                { limit: 80, text: "暗号化パケットの受信中..." },
+                { limit: 100, text: "データを復号して展開中..." }
+            ];
+
+            dlInterval = setInterval(() => {
+                percent += Math.floor(Math.random() * 5) + 2;
+                if (percent >= 100) {
+                    percent = 100;
+                    clearInterval(dlInterval);
+                    completeDownload();
+                }
+
+                document.getElementById("dl-percentage").innerText = percent + "%";
+                document.getElementById("dl-progress-fill").style.width = percent + "%";
+
+                const currentPhase = phases.find(p => percent <= p.limit);
+                if (currentPhase) {
+                    document.getElementById("dl-phase-text").innerText = currentPhase.text;
+                }
+            }, 60);
+        }
+
+        function completeDownload() {
+            document.getElementById("dl-modal-title").innerText = "🔓 同期完了";
+            document.getElementById("dl-phase-text").innerText = "ダウンロードが完了しました。";
+
+            document.getElementById("dl-book-preview").innerText = currentBook.content;
+            document.getElementById("dl-complete-section").style.display = "block";
+
+            const footer = document.getElementById("dl-modal-footer");
+            footer.innerHTML = `
+                <button class="modal-btn secondary-btn" onclick="saveFileToDevice()">💾 端末に保存</button>
+                <button class="modal-btn primary-btn" onclick="closeDlModal()">閉じる</button>
+            `;
+        }
+
+        function cancelDownload() {
+            if (dlInterval) clearInterval(dlInterval);
+            closeDlModal();
+        }
+
+        function closeDlModal() {
+            document.getElementById("dl-modal").style.display = "none";
+            document.body.classList.remove("modal-open");
+            currentBook = null;
+        }
+
+        function saveFileToDevice() {
+            if (!currentBook) return;
+
+            const blob = new Blob([currentBook.content], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            const cleanTitle = currentBook.title.replace(/[『』]/g, "");
+            a.download = `${cleanTitle}_特別配付資料.txt`;
+
+            document.body.appendChild(a);
+            a.click();
+
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        /* ========================================================
+           ダミーモーダル表示
+           ======================================================== */
+        function showDummyAlert(title) {
+            document.getElementById("modal-title").innerText = "⚠ " + title;
+            document.getElementById("modal-body").innerText = "現在アクセスできません";
+            document.getElementById("custom-modal").style.display = "flex";
+            document.body.classList.add("modal-open");
+        }
+
+        function closeModal(event) {
+            if (event.target.id === "custom-modal") {
+                forceCloseModal();
+            }
+        }
+
+        function forceCloseModal() {
+            document.getElementById("custom-modal").style.display = "none";
+            document.body.classList.remove("modal-open");
+        }
     </script>
 </body>
+
 </html>
