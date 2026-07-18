@@ -6,7 +6,7 @@ function Show-Menu {
     Write-Host " Nilatorf STN Access Admin Tool"
     Write-Host "========================================="
     Write-Host ""
-    Write-Host "Current Settings:"
+    Write-Host "[Current Settings]"
     if (Test-Path $settingFile) {
         Get-Content $settingFile | Write-Host
     } else {
@@ -15,16 +15,12 @@ function Show-Menu {
     }
     Write-Host ""
     Write-Host "========================================="
-    Write-Host "[1] Change PL1 status"
-    Write-Host "[2] Change PL2 status"
-    Write-Host "[3] Change PL3 status"
-    Write-Host "[4] Change PL4 status"
-    Write-Host "[5] Change PL5 status"
-    Write-Host ""
-    Write-Host "[9] Save and Push to GitHub"
+    Write-Host "[1] Change PL status (e.g., 1,2,5 or 12,13)"
+    Write-Host "[2] Change ALL PLs status"
+    Write-Host "[9] Pull, Save and Push to GitHub"
     Write-Host "[0] Exit"
     Write-Host "========================================="
-    $option = Read-Host "Select menu (0-9)"
+    $option = Read-Host "Select menu (0-2, 9)"
     return $option
 }
 
@@ -35,17 +31,60 @@ while ($true) {
         break
     }
     elseif ($option -eq '9') {
-        Write-Host "`nPushing changes to GitHub..."
+        Write-Host "`nPulling latest changes from GitHub..."
         Set-Location $PSScriptRoot
+        git pull --rebase
+        Write-Host "`nPushing changes to GitHub..."
         git add "setting.json"
         git commit -m "Update access settings from admin tool"
         git push
-        Write-Host "`nPush completed."
+        Write-Host "`nSync completed."
         Read-Host "Press Enter to return"
     }
-    elseif ($option -match '^[1-5]$') {
-        $plId = "PL$option"
-        Write-Host "`nSelect new status for $plId :"
+    elseif ($option -eq '1' -or $option -eq '2') {
+        $targetPls = @()
+        
+        $json = $null
+        if (Test-Path $settingFile) {
+            $rawJson = Get-Content $settingFile -Raw
+            if (![string]::IsNullOrWhiteSpace($rawJson)) {
+                $json = $rawJson | ConvertFrom-Json
+            }
+        }
+        if ($null -eq $json) { $json = New-Object PSObject }
+        
+        if ($option -eq '2') {
+            # All PLs
+            $targetPls = $json.PSObject.Properties.Name
+            if ($targetPls.Count -eq 0) {
+                Write-Host "`nNo PLs found in setting.json."
+                Read-Host "Press Enter to return"
+                continue
+            }
+            Write-Host "`nTarget: ALL PLs ($($targetPls -join ', '))"
+        } else {
+            # Specific PLs
+            Write-Host "`nEnter PL numbers to change (comma-separated, e.g., 1,2,12):"
+            $inputPls = Read-Host "PL numbers"
+            
+            if ([string]::IsNullOrWhiteSpace($inputPls)) {
+                continue
+            }
+            
+            $plNumbers = $inputPls -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -match '^\d+$' }
+            if ($plNumbers.Count -eq 0) {
+                Write-Host "`nInvalid input. Please enter numbers."
+                Read-Host "Press Enter to return"
+                continue
+            }
+            
+            foreach ($num in $plNumbers) {
+                $targetPls += "PL$num"
+            }
+            Write-Host "`nTarget: $($targetPls -join ', ')"
+        }
+
+        Write-Host "`nSelect new status:"
         Write-Host "[1] ok (Allow access)"
         Write-Host "[2] ng (Show Error / Freeze)"
         Write-Host "[3] t  (Redirect to Booth)"
@@ -57,29 +96,22 @@ while ($true) {
         elseif ($statusOpt -eq '3') { $newStatus = "t" }
 
         if ($newStatus -ne "") {
-            $json = $null
-            if (Test-Path $settingFile) {
-                $rawJson = Get-Content $settingFile -Raw
-                if (![string]::IsNullOrWhiteSpace($rawJson)) {
-                    $json = $rawJson | ConvertFrom-Json
+            foreach ($pl in $targetPls) {
+                if ($json.PSObject.Properties.Name -contains $pl) {
+                    $json.$pl = $newStatus
+                } else {
+                    $json | Add-Member -MemberType NoteProperty -Name $pl -Value $newStatus
                 }
-            }
-            if ($null -eq $json) { $json = New-Object PSObject }
-            
-            if ($json.PSObject.Properties.Name -contains $plId) {
-                $json.$plId = $newStatus
-            } else {
-                $json | Add-Member -MemberType NoteProperty -Name $plId -Value $newStatus
             }
             
             $json | ConvertTo-Json -Depth 10 | Set-Content $settingFile -Encoding ASCII
-            Write-Host "`nStatus for $plId changed to $newStatus ."
+            Write-Host "`nStatus successfully updated."
         } else {
-            Write-Host "Invalid option."
+            Write-Host "`nInvalid option."
         }
         Read-Host "Press Enter to return"
     } else {
-        Write-Host "Invalid option."
+        Write-Host "`nInvalid option."
         Read-Host "Press Enter to return"
     }
 }
