@@ -500,6 +500,65 @@
             height: 100%;
         }
 
+        /* ==========================================
+           サブ画面: 履修登録・時間割画面
+           ========================================== */
+        .schedule-table-wrapper {
+            padding: 0 16px 20px 16px;
+            overflow-x: auto;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+            text-align: center;
+        }
+
+        .schedule-table th,
+        .schedule-table td {
+            border: 1px solid rgba(0, 114, 255, 0.1);
+            padding: 6px 2px;
+            vertical-align: middle;
+        }
+
+        .schedule-table th {
+            background: rgba(0, 114, 255, 0.04);
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .schedule-time-col {
+            width: 44px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 8px;
+            color: var(--text-muted);
+            white-space: pre-wrap;
+            line-height: 1.2;
+        }
+
+        .schedule-cell {
+            height: 44px;
+            font-weight: bold;
+            color: var(--text-main);
+            word-break: break-all;
+        }
+        
+        .schedule-cell.has-class {
+            background: rgba(0, 114, 255, 0.06);
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .schedule-action-area {
+            padding: 0 16px 20px 16px;
+            margin-top: auto;
+        }
+
         .back-bar {
             display: flex;
             align-items: center;
@@ -892,7 +951,7 @@
                     <div class="menu-section-title">ACADEMIC TOOLS</div>
                     <div class="menu-grid">
                         <!-- ダミーボタン1 -->
-                        <div class="menu-button" onclick="showDummyAlert('履修登録')">
+                        <div class="menu-button" onclick="switchPage('schedule-page')">
                             <div class="menu-icon">📇</div>
                             <div>
                                 <div class="menu-title">履修登録</div>
@@ -910,7 +969,7 @@
                         </div>
 
                         <!-- ダミーボタン3 -->
-                        <div class="menu-button" onclick="showDummyAlert('学費納入案内')">
+                        <div class="menu-button" onclick="showDummyAlert('学費納入案内', 'すでに納入されています。')">
                             <div class="menu-icon">💳</div>
                             <div>
                                 <div class="menu-title">学費納入案内</div>
@@ -949,7 +1008,7 @@
                         <!-- ダミーボタン5 (通常通達削除版) -->
                         <div class="menu-button"
                             style="height: 60px; flex-direction: row; align-items: center; justify-content: flex-start; gap: 15px;"
-                            onclick="showDummyAlert('学内緊急連絡', '現在、セキュリティ管理局から発令されている緊急警報（レベル2以上）はありません。')">
+                            onclick="showEmergencyAlert()">
                             <div class="menu-icon"
                                 style="margin-bottom:0; color:var(--alert); border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.04);">
                                 ⚠️</div>
@@ -997,6 +1056,32 @@
                 <!-- 検索結果リスト -->
                 <div id="search-results" class="results-container">
                     <!-- JSで動的に追加されます -->
+                </div>
+            </div>
+
+            <!-- ========================================================
+                 【正常画面内】履修登録・時間割照会 サブページ
+                 ======================================================== -->
+            <div id="schedule-page" class="sub-page">
+                <div class="back-bar" onclick="switchPage('main-menu-page')">
+                    <span class="back-icon">◀</span> ポータルホームへ戻る
+                </div>
+
+                <div class="page-title-area">
+                    <h2>履修登録・時間割照会</h2>
+                    <p>現在の履修状況と時間割を確認できます。</p>
+                </div>
+
+                <div class="schedule-table-wrapper" id="schedule-container">
+                    <div style="text-align:center; padding:20px; font-size:11px; color:var(--text-muted);">
+                        読込中...
+                    </div>
+                </div>
+
+                <div class="schedule-action-area">
+                    <button class="dl-btn" style="background: linear-gradient(to right, #64748b, #94a3b8);" onclick="showDummyAlert('履修登録', '現在、履修登録期間外のためロックされています。')">
+                        🔒 履修科目の変更
+                    </button>
                 </div>
             </div>
         </div>
@@ -1066,6 +1151,9 @@
         // 教科書・教材データベース
         let TEXTBOOK_DATABASE = [];
 
+        // グローバル変数: 現在のPLのID
+        let currentPlId = "";
+
         // 動作環境の取得
         const host = window.location.hostname;
         const path = window.location.pathname;
@@ -1098,6 +1186,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             const isNfc = urlParams.get('src') === 'nfc';
             const plId = urlParams.get('id') || "";
+            currentPlId = plId;
 
             // 1. 直リンクの制限チェック (src=nfcの有無)
             if (!isNfc) {
@@ -1397,6 +1486,7 @@
         function switchPage(pageId) {
             document.getElementById("main-menu-page").style.display = "none";
             document.getElementById("textbook-page").style.display = "none";
+            document.getElementById("schedule-page").style.display = "none";
 
             if (pageId === "main-menu-page") {
                 document.getElementById("main-menu-page").style.display = "block";
@@ -1404,6 +1494,10 @@
                 const targetPage = document.getElementById(pageId);
                 if (targetPage) {
                     targetPage.style.display = "flex";
+                }
+                
+                if (pageId === "schedule-page") {
+                    loadScheduleData(currentPlId);
                 }
             }
         }
@@ -1556,13 +1650,128 @@
         }
 
         /* ========================================================
-           ダミーモーダル表示
+           ダミーモーダル表示・学内緊急連絡取得
            ======================================================== */
-        function showDummyAlert(title) {
+        function showDummyAlert(title, message = "現在アクセスできません") {
             document.getElementById("modal-title").innerText = "⚠ " + title;
-            document.getElementById("modal-body").innerText = "現在アクセスできません";
+            document.getElementById("modal-body").innerText = message;
             document.getElementById("custom-modal").style.display = "flex";
             document.body.classList.add("modal-open");
+        }
+        
+        async function showEmergencyAlert() {
+            let msg = "現在、セキュリティ管理局から発令されている緊急警報（レベル2以上）はありません。";
+            try {
+                const res = await fetch(`emergency.json?t=${new Date().getTime()}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    let targetMsg = data[currentPlId] || data["default"];
+                    if (targetMsg === "default") {
+                        targetMsg = data["default"];
+                    }
+                    if (targetMsg) {
+                        msg = targetMsg;
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to fetch emergency.json", e);
+            }
+            showDummyAlert("学内緊急連絡", msg);
+        }
+
+        /* ========================================================
+           時間割データ生成処理
+           ======================================================== */
+        async function loadScheduleData(plId) {
+            const container = document.getElementById("schedule-container");
+            
+            try {
+                // 1. 時間割の枠定義を読み込む
+                const baseRes = await fetch(`ClassSchedule/時間割.txt?t=${new Date().getTime()}`);
+                if (!baseRes.ok) throw new Error("時間割ベースファイルが見つかりません");
+                const baseText = await baseRes.text();
+                
+                // 2. PLごとの履修データを読み込む
+                let plText = "";
+                if (plId) {
+                    const plRes = await fetch(`ClassSchedule/${plId}.txt?t=${new Date().getTime()}`);
+                    if (plRes.ok) {
+                        plText = await plRes.text();
+                    }
+                }
+                
+                // 時間割ベースのパース（簡易）
+                const baseLines = baseText.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+                let periods = [];
+                // 「0時限目7:20~8:50」などの行を抽出
+                for (const line of baseLines) {
+                    const match = line.match(/^(\d)時限目(.*?)$/);
+                    if (match) {
+                        periods.push({
+                            num: match[1],
+                            time: match[2].trim()
+                        });
+                    }
+                }
+                
+                // もしパースできなかった場合のフォールバック
+                if (periods.length === 0) {
+                    periods = [
+                        {num: "0", time: "7:20~8:50"}, {num: "1", time: "9:00~10:30"}, 
+                        {num: "2", time: "10:40~12:10"}, {num: "3", time: "13:00~14:30"},
+                        {num: "4", time: "14:40~16:10"}, {num: "5", time: "16:20~17:50"}, {num: "6", time: "18:00~19:30"}
+                    ];
+                }
+
+                // PLデータのパース (曜日,時限,科目名)
+                const plData = {}; // plData["月"]["1"] = "現代文"
+                const days = ["月", "火", "水", "木", "金"];
+                days.forEach(d => plData[d] = {});
+                
+                const plLines = plText.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+                for (const line of plLines) {
+                    const parts = line.split(',');
+                    if (parts.length >= 3) {
+                        const day = parts[0].trim();
+                        const period = parts[1].trim();
+                        const subject = parts[2].trim();
+                        if (plData[day]) {
+                            plData[day][period] = subject;
+                        }
+                    }
+                }
+
+                // テーブルDOM生成
+                let html = '<table class="schedule-table">';
+                html += '<thead><tr><th class="schedule-time-col">時限</th>';
+                days.forEach(d => {
+                    html += `<th>${d}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+
+                for (const p of periods) {
+                    html += `<tr>`;
+                    const timeStr = p.time.replace("~", "~\n"); // 見やすく改行
+                    html += `<td class="schedule-time-col">${p.num}限<br><span style="font-size:7px;">${timeStr}</span></td>`;
+                    
+                    for (const d of days) {
+                        const subject = plData[d][p.num] || "";
+                        if (subject) {
+                            html += `<td class="schedule-cell has-class">${subject}</td>`;
+                        } else {
+                            html += `<td class="schedule-cell"></td>`;
+                        }
+                    }
+                    html += `</tr>`;
+                }
+                
+                html += '</tbody></table>';
+                container.innerHTML = html;
+                
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = `<div style="text-align:center; padding:20px; font-size:11px; color:var(--alert);">時間割データの読み込みに失敗しました。</div>`;
+            }
         }
 
         function closeModal(event) {
