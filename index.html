@@ -155,79 +155,6 @@
         }
 
         /* ==========================================
-           不正アクセス画面 (?src=nfc なし)
-           ========================================== */
-        .denied-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 24px;
-            min-height: 100vh;
-            text-align: center;
-            background: var(--alert-bg);
-        }
-
-        .denied-logo {
-            width: 110px;
-            height: 110px;
-            margin-bottom: 24px;
-            border-radius: 50%;
-            background: #ffffff;
-            border: 2px solid var(--alert);
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        .denied-logo img {
-            width: 80%;
-            height: 80%;
-            object-fit: contain;
-        }
-
-        .denied-title {
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--alert);
-            margin-bottom: 16px;
-            letter-spacing: 0.05em;
-        }
-
-        .denied-card {
-            background: #ffffff;
-            border: 1px solid var(--alert-border);
-            border-radius: 12px;
-            padding: 24px;
-            width: 100%;
-            box-shadow: 0 6px 18px rgba(239, 68, 68, 0.06);
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        .denied-card h2 {
-            font-size: 15px;
-            color: var(--text-main);
-            margin-bottom: 12px;
-            border-bottom: 1px solid #fee2e2;
-            padding-bottom: 8px;
-            font-weight: 700;
-        }
-
-        .denied-card p {
-            font-size: 13px;
-            line-height: 1.6;
-            color: #475569;
-            margin-bottom: 12px;
-        }
-
-        .denied-card p:last-child {
-            margin-bottom: 0;
-        }
-
-        /* ==========================================
            【最重要】NG状態：アクティベートエラーウィンドウ群
            ========================================== */
         #ng-overlay {
@@ -924,27 +851,6 @@
         </div>
 
         <!-- ========================================================
-             【直リンクエラー】不正アクセス用コンテナ
-             ======================================================== -->
-        <div id="denied-screen" class="denied-container fade-in" style="display: none;">
-            <div class="denied-logo">
-                <img src="./symbol.png" alt="ニラトルフ校章" onerror="this.style.display='none';">
-            </div>
-
-            <div class="denied-title">ACCESS DENIED</div>
-
-            <div class="denied-card">
-                <h2>不正なアクセス経路を検知しました</h2>
-                <p>
-                    本ポータルサイトへのアクセスには、配布された認証端末（NFCタグ等）からの直接遷移が必要です。
-                </p>
-                <p>
-                    URLの直接入力や、未検証の端末からのリンク移行はシステムセキュリティ規定により遮断されました。
-                </p>
-            </div>
-        </div>
-
-        <!-- ========================================================
              【正常画面】ポータル本体 (OK状態時にアクティブ)
              ======================================================== -->
         <div id="portal-screen" class="fade-in" style="display: none;">
@@ -1195,45 +1101,63 @@
 
             // 1. 直リンクの制限チェック (src=nfcの有無)
             if (!isNfc) {
-                document.getElementById("denied-screen").style.display = "flex";
-                document.getElementById("portal-screen").style.display = "none";
+                // src=nfcがない場合は何も表示しない（真っ白にする）
+                document.body.innerHTML = "";
                 return;
             }
 
-            // 2. 状態管理ファイル (status-OK.txt) の有無でOK/NG判定
-            const devStatus = urlParams.get('dev_status'); // ローカルデバッグ用
+            // 2. 設定ファイル (setting.json) を読み込み
+            let plStatus = "t"; // デフォルトは転送(t)
 
+            // dev_statusパラメータでの強制分岐（デバッグ用）
+            const devStatus = urlParams.get('dev_status');
             if (devStatus === "ok") {
                 console.log("[Dev] Forced OK state");
+                plStatus = "ok";
             } else if (devStatus === "ng") {
                 console.log("[Dev] Forced NG state");
-                triggerNGState();
-                return;
+                plStatus = "ng";
             } else {
                 try {
-                    // キャッシュ回避のためにタイムスタンプを付与
-                    const statusResponse = await fetch(`status-OK.txt?t=${new Date().getTime()}`);
-                    // status-OK.txt が存在しない（ok=false）場合はNG状態とする
-                    if (!statusResponse.ok) {
-                        triggerNGState();
-                        return;
+                    const settingsResponse = await fetch(`setting.json?t=${new Date().getTime()}`);
+                    if (settingsResponse.ok) {
+                        const settings = await settingsResponse.json();
+                        // PL IDに対応するステータスを取得（未定義の場合はデフォルトの"t"を維持）
+                        if (plId && settings[plId]) {
+                            plStatus = settings[plId];
+                        }
+                    } else {
+                        console.warn("Failed to load setting.json. Defaulting to redirect.");
                     }
                 } catch (e) {
-                    // file:// プロトコルなどのCORSエラー時は、ローカルでの動作確認をしやすくするため
-                    // デフォルトでOK状態を表示させる（コンソールに警告のみ出力）
+                    console.error("Error loading setting.json", e);
+                    // ファイルスキームやCORSエラー時はローカルデバッグのため便宜的に動作を変えるか、デフォルトを適用
                     if (window.location.protocol === 'file:') {
-                        console.warn("Detected file:// protocol. Default to OK state for local development. Use URL param '?src=nfc&dev_status=ng' to test NG state.", e);
-                    } else {
-                        // 本番環境（サーバー上）での通信エラー時は、安全のためアクセスをブロック（NG）する
-                        triggerNGState();
-                        return;
+                        console.warn("Local file:// protocol detected. Check network tab.");
                     }
                 }
             }
 
-            // 3. OK状態：通常表示
+            // 3. ステータスに応じた処理の分岐
+            if (plStatus === "t" || plStatus === "redirect") {
+                // 基準2: Boothへの転送
+                window.location.href = "https://booth.pm/ja/items/4022246";
+                return;
+            } else if (plStatus === "ng") {
+                // 基準3: NG状態 (エラーウィンドウ表示・フリーズ)
+                triggerNGState();
+                return;
+            } else if (plStatus === "ok") {
+                // 基準4: OK状態 (通常表示)
+                // 処理を継続
+            } else {
+                // その他の未知のステータスの場合もBoothへ転送（デフォルト）
+                window.location.href = "https://booth.pm/ja/items/4022246";
+                return;
+            }
+
+            // 正常表示の準備
             document.getElementById("portal-screen").style.display = "block";
-            document.getElementById("denied-screen").style.display = "none";
 
             // 探索者個別データの同期
             if (plId) {
